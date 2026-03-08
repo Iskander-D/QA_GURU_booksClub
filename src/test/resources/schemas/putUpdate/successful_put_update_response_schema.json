@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Successful User Update Response Schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "username": {
+      "type": "string"
+    },
+    "firstName": {
+      "type": "string"
+    },
+    "lastName": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string",
+      "format": "email"
+    },
+    "remoteAddr": {
+      "type": "string",
+      "format": "ipv4"
+    }
+  },
+  "required": [
+    "id",
+    "username",
+    "firstName",
+    "lastName",
+    "email",
+    "remoteAddr"
+  ]
+}

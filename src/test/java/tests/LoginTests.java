@@ -6,7 +6,7 @@ import models.login.WrongCredentialsLoginResponseModel;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
-import static spec.LoginSpec.*;
+import static spec.login.LoginSpec.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
