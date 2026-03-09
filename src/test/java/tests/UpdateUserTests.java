@@ -86,7 +86,8 @@ public class UpdateUserTests extends TestBase {
 
         SuccessfulPutUpdateResponseModel putUpdateResponse = given(requestSpec)
                 .body(putUpdateBody)
-                .header("Authorization", "Bearer " + actualAccessToken) //1 вариант - токен для авторизации в методе Put из TestBase, который сохраняется в переменную actualAccessToken при каждом логине
+                .auth().oauth2(actualAccessToken) // ← автоматически добавит "Authorization: Bearer <token>"
+//                .header("Authorization", "Bearer " + actualAccessToken) //1 вариант - токен для авторизации в методе Put из TestBase, который сохраняется в переменную actualAccessToken при каждом логине
 //                .header("Authorization", authHeader) //2 вариант
                 .when()
                 .put("/users/me/")
