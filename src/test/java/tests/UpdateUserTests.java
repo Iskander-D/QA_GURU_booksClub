@@ -76,13 +76,18 @@ public class UpdateUserTests extends TestBase {
                 .spec(successfulLoginResponseSpec)
                 .extract().as(SuccessfulLoginResponseModel.class);
 
-        String authHeader = "Bearer " + loginResponse.access(); //токен для авторизации в методе Put
+        String actualAccessToken = loginResponse.access();
+        String actualRefreshToken = loginResponse.refresh();
+        assertThat(actualAccessToken).isNotEqualTo(actualRefreshToken);
+
+//        String authHeader = "Bearer " + loginResponse.access(); //2 dвариант токен для авторизации в методе Put
 
         PutUpdateBodyModel putUpdateBody = new PutUpdateBodyModel(username, firstName, lastName, email);
 
         SuccessfulPutUpdateResponseModel putUpdateResponse = given(requestSpec)
                 .body(putUpdateBody)
-                .header("Authorization", authHeader)
+                .header("Authorization", "Bearer " + actualAccessToken) //1 вариант - токен для авторизации в методе Put из TestBase, который сохраняется в переменную actualAccessToken при каждом логине
+//                .header("Authorization", authHeader) //2 вариант
                 .when()
                 .put("/users/me/")
                 .then()
