@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static spec.logOut.LogoutSpec.*;
-import static spec.login.LoginSpec.loginRequestSpec;
+import static spec.login.LoginSpec.requestSpec;
 import static spec.login.LoginSpec.successfulLoginResponseSpec;
 
 
@@ -28,7 +28,7 @@ public class LogoutTests extends TestBase {
     public void successfulLogoutTest() {
         LoginBodyModel loginData = new LoginBodyModel(username, password);
 
-        SuccessfulLoginResponseModel loginResponse = given(loginRequestSpec)
+        SuccessfulLoginResponseModel loginResponse = given(requestSpec)
                 .body(loginData)
                 .when()
                 .post("/auth/token/")
@@ -40,7 +40,7 @@ public class LogoutTests extends TestBase {
         String refreshToken = loginResponse.refresh();
         LogoutBodyModel logoutData = new LogoutBodyModel(refreshToken);
 
-        given(loginRequestSpec)
+        given(requestSpec)
                 .body(logoutData)
                 .when()
                 .post("/auth/logout/")
@@ -55,7 +55,7 @@ public class LogoutTests extends TestBase {
     public void invalidTokenLogoutTest() {
         LogoutBodyModel logoutData = new LogoutBodyModel(badToken);
 
-        InvalidLogoutTokenModel invalidToken = given(loginRequestSpec)
+        InvalidLogoutTokenModel invalidToken = given(requestSpec)
                 .body(logoutData)
                 .when()
                 .post("/auth/logout/")
@@ -78,7 +78,7 @@ public class LogoutTests extends TestBase {
     public void emptyTokenLogoutTest() {
         LogoutBodyModel logoutData = new LogoutBodyModel(emptyToken);
 
-        EmptyOrNullLogoutResponseModel invalidToken = given(loginRequestSpec)
+        EmptyOrNullLogoutResponseModel invalidToken = given(requestSpec)
                 .body(logoutData)
                 .when()
                 .post("/auth/logout/")
