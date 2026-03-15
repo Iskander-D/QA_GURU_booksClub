@@ -1,14 +1,19 @@
 package spec.logOut;
 
 import io.restassured.builder.ResponseSpecBuilder;
+import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
 
 import static io.restassured.filter.log.LogDetail.ALL;
 import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
+import static spec.login.LoginSpec.requestSpec;
 
 public class LogoutSpec {
+
+    public static RequestSpecification logoutRequestSpec = requestSpec; // экземпляр от базовой спеки
+
     public static ResponseSpecification successfulLogoutResponseSpec = new ResponseSpecBuilder().
 
             log(ALL).
