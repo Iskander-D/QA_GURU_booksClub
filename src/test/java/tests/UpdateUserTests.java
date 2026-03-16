@@ -114,60 +114,77 @@ public class UpdateUserTests extends TestBase {
     @Test
     public void wrongExceedUpdatePutTest() {
 
+        SuccessfulRegistrationResponseModel registrationResponse = step("Регистрация нового пользователя", () -> {
+            RegistrationBodyModel registrationData = new RegistrationBodyModel(username, password);
+            return given(requestSpec)
+                    .body(registrationData)
+                    .when()
+                    .post("/users/register/")
+                    .then()
+                    .spec(successfulRegistrationResponseSpec)
+                    .extract().as(SuccessfulRegistrationResponseModel.class);
+        });
+        step("Проверка данных регистрации", () -> {
+            assertThat(registrationResponse.id()).isGreaterThan(0);
+            assertThat(registrationResponse.username()).isEqualTo(username);
+            assertThat(registrationResponse.firstName()).isEqualTo("");
+            assertThat(registrationResponse.lastName()).isEqualTo("");
+            assertThat(registrationResponse.email()).isEqualTo("");
 
-        RegistrationBodyModel registrationData = new RegistrationBodyModel(username, password);
+            String ipAddrRegexp = "^((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.){3}"
+                    + "(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)$";
+            assertThat(registrationResponse.remoteAddr()).matches(ipAddrRegexp);
+        });
 
-        given(requestSpec)
-                .body(registrationData)
-                .when()
-                .post("/users/register/")
-                .then()
-                .spec(successfulRegistrationResponseSpec);
+        SuccessfulLoginResponseModel loginResponse = step(" Авторизация и получение токена ", () -> {
+            LoginBodyModel loginData = new LoginBodyModel(username, password);
+            return given(requestSpec)
+                    .body(loginData)
+                    .when()
+                    .post("/auth/token/")
+                    .then()
+                    .spec(successfulLoginResponseSpec)
+                    .extract().as(SuccessfulLoginResponseModel.class);
+        });
+        step("Проверка, что access и refresh токены не совпадают", () -> {
+            assertThat(loginResponse.access()).isNotEqualTo(loginResponse.refresh());
+        });
 
-        LoginBodyModel loginData = new LoginBodyModel(username, password);
+        WrongOrNoFieldsPutUpdateResponseModel wrongPutUpdateResponse = step("Авторизация с неверными данными", () -> {
+            PutUpdateBodyModel putUpdateBody = new PutUpdateBodyModel(forbiddenUsername, exceededLengthUsername,
+                    exceededLengthUsername, forbiddenExceededEmail);
+            return given(requestSpec)
+                    .body(putUpdateBody)
+                    .auth().oauth2(loginResponse.access())
+                    .when()
+                    .put("/users/me/")
+                    .then()
+                    .spec(wrongOrNoFieldsPutUserUpdateSpec)
+                    .extract().as(WrongOrNoFieldsPutUpdateResponseModel.class);
+        });
 
-        SuccessfulLoginResponseModel loginResponse = given(requestSpec)
-                .body(loginData)
-                .when()
-                .post("/auth/token/")
-                .then()
-                .spec(successfulLoginResponseSpec)
-                .extract().as(SuccessfulLoginResponseModel.class);
+        step("Проверка ошибок валидации при превышении допустимых значений", () -> {
+            String actualUsernameError = wrongPutUpdateResponse.username().get(0);
+            String actualFirstNameError = wrongPutUpdateResponse.firstName().get(0);
+            String actualLastNameError = wrongPutUpdateResponse.lastName().get(0);
+            String actualAmountEmailError = wrongPutUpdateResponse.email().get(0);
+            String actualFormatEmailError = wrongPutUpdateResponse.email().get(1);
+            String expectedUsernameError = "Enter a valid username. This value may contain only letters, numbers, and @/./+/-/_ characters.";
+            String expectedFirstNameError = "Ensure this field has no more than 150 characters.";
+            String expectedLastNameError = "Ensure this field has no more than 150 characters.";
+            String expectedAmountEmailError = "Ensure this field has no more than 254 characters.";
+            String expectedFormatEmailError = "Enter a valid email address.";
 
-        String authHeader = "Bearer " + loginResponse.access(); //токен для авторизации в методе Put
-
-        PutUpdateBodyModel putUpdateBody = new PutUpdateBodyModel(forbiddenUsername, exceededLengthUsername,
-                exceededLengthUsername, forbiddenExceededEmail);
-
-        WrongOrNoFieldsPutUpdateResponseModel wrongPutUpdateResponse = given(requestSpec)
-                .body(putUpdateBody)
-                .header("Authorization", authHeader)
-                .when()
-                .put("/users/me/")
-                .then()
-                .spec(wrongOrNoFieldsPutUserUpdateSpec)
-                .extract().as(WrongOrNoFieldsPutUpdateResponseModel.class);
-
-
-        String actualUsernameError = wrongPutUpdateResponse.username().get(0);
-        String actualFirstNameError = wrongPutUpdateResponse.firstName().get(0);
-        String actualLastNameError = wrongPutUpdateResponse.lastName().get(0);
-        String actualAmountEmailError = wrongPutUpdateResponse.email().get(0);
-        String actualFormatEmailError = wrongPutUpdateResponse.email().get(1);
-        String expectedUsernameError = "Enter a valid username. This value may contain only letters, numbers, and @/./+/-/_ characters.";
-        String expectedFirstNameError = "Ensure this field has no more than 150 characters.";
-        String expectedLastNameError = "Ensure this field has no more than 150 characters.";
-        String expectedAmountEmailError = "Ensure this field has no more than 254 characters.";
-        String expectedFormatEmailError = "Enter a valid email address.";
-
-        assertThat(actualUsernameError).isEqualTo(expectedUsernameError);
-        assertThat(actualFirstNameError).isEqualTo(expectedFirstNameError);
-        assertThat(actualLastNameError).isEqualTo(expectedLastNameError);
-        assertThat(actualAmountEmailError).isEqualTo(expectedAmountEmailError);
-        assertThat(actualFormatEmailError).isEqualTo(expectedFormatEmailError);
+            assertThat(actualUsernameError).isEqualTo(expectedUsernameError);
+            assertThat(actualFirstNameError).isEqualTo(expectedFirstNameError);
+            assertThat(actualLastNameError).isEqualTo(expectedLastNameError);
+            assertThat(actualAmountEmailError).isEqualTo(expectedAmountEmailError);
+            assertThat(actualFormatEmailError).isEqualTo(expectedFormatEmailError);
 
 
+        });
     }
+
 
     @Test
     @DisplayName("Неуспешная замена данных методом PUT - поля не переданы в тело")
