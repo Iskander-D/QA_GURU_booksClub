@@ -54,7 +54,6 @@ public class DeleteTest extends TestBase {
                 .delete("/users/me/")
                 .then()
                 .log().all()
-//                .log().ifValidationFails()
                 .statusCode(204)
                 .header("Content-Length", "0");
     }

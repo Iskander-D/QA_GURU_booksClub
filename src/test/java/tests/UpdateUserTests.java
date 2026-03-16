@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static spec.login.LoginSpec.requestSpec;
@@ -53,68 +54,67 @@ public class UpdateUserTests extends TestBase {
 
     @Test
     public void successfulUpdatePutTest() { //todo сперва логинимся а потом делаем метод Put
-        RegistrationBodyModel registrationData = new RegistrationBodyModel(username, password);
 
-        SuccessfulRegistrationResponseModel registrationResponse = given(requestSpec)
-                .body(registrationData)
-                .when()
-                .post("/users/register/")
-                .then()
-                .spec(successfulRegistrationResponseSpec)
-                .extract().as(SuccessfulRegistrationResponseModel.class);
+        SuccessfulRegistrationResponseModel registrationResponse = step("Регистрация нового пользователя", () -> {
+            RegistrationBodyModel registrationData = new RegistrationBodyModel(username, password);
+            return given(requestSpec)
+                    .body(registrationData)
+                    .when()
+                    .post("/users/register/")
+                    .then()
+                    .spec(successfulRegistrationResponseSpec)
+                    .extract().as(SuccessfulRegistrationResponseModel.class);
+        });
+        step("Проверка данных регистрации", () -> {
+            assertThat(registrationResponse.id()).isGreaterThan(0);
+            assertThat(registrationResponse.username()).isEqualTo(username);
+            assertThat(registrationResponse.firstName()).isEqualTo("");
+            assertThat(registrationResponse.lastName()).isEqualTo("");
+            assertThat(registrationResponse.email()).isEqualTo("");
 
-        int userId = registrationResponse.id(); // записали ID нового пользователя в переменную, чтобы потом сравнитть его в ответе метода Put
-        String remoteAddr = registrationResponse.remoteAddr(); // записали IP адрес нового пользователя в переменную, чтобы потом проверить его в ответе метода Put
+            String ipAddrRegexp = "^((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.){3}"
+                    + "(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)$";
+            assertThat(registrationResponse.remoteAddr()).matches(ipAddrRegexp);
+        });
 
-        LoginBodyModel loginData = new LoginBodyModel(username, password);
+        SuccessfulLoginResponseModel loginResponse = step(" Авторизация и получение токена ", () -> {
+            LoginBodyModel loginData = new LoginBodyModel(username, password);
+            return given(requestSpec)
+                    .body(loginData)
+                    .when()
+                    .post("/auth/token/")
+                    .then()
+                    .spec(successfulLoginResponseSpec)
+                    .extract().as(SuccessfulLoginResponseModel.class);
+        });
+        step("Проверка, что access и refresh токены не совпадают", () -> {
+            assertThat(loginResponse.access()).isNotEqualTo(loginResponse.refresh());
+        });
 
-        SuccessfulLoginResponseModel loginResponse = given(requestSpec)
-                .body(loginData)
-                .when()
-                .post("/auth/token/")
-                .then()
-                .spec(successfulLoginResponseSpec)
-                .extract().as(SuccessfulLoginResponseModel.class);
-
-        String actualAccessToken = loginResponse.access();
-        String actualRefreshToken = loginResponse.refresh();
-        assertThat(actualAccessToken).isNotEqualTo(actualRefreshToken);
-
-//        String authHeader = "Bearer " + loginResponse.access(); //2 dвариант токен для авторизации в методе Put
-
-        PutUpdateBodyModel putUpdateBody = new PutUpdateBodyModel(username, firstName, lastName, email);
-
-        SuccessfulPutUpdateResponseModel putUpdateResponse = given(requestSpec)
-                .body(putUpdateBody)
-                .auth().oauth2(actualAccessToken) // ← автоматически добавит "Authorization: Bearer <token>"
-//                .header("Authorization", "Bearer " + actualAccessToken) //1 вариант - токен для авторизации в методе Put из TestBase, который сохраняется в переменную actualAccessToken при каждом логине
-//                .header("Authorization", authHeader) //2 вариант
-                .when()
-                .put("/users/me/")
-                .then()
-                .spec(successfulPutUpdateResponseSpec)
-                .extract().as(SuccessfulPutUpdateResponseModel.class);
-
-        //todo add assertions
-        int actualId = putUpdateResponse.id();
-        String actualUsername = putUpdateResponse.username();
-        String actualFirstName = putUpdateResponse.firstName();
-        String actualLastName = putUpdateResponse.lastName();
-        String actualEmail = putUpdateResponse.email();
-        String actualAddr = putUpdateResponse.remoteAddr();
-
-        assertThat(actualId).isEqualTo(userId);
-        assertThat(actualUsername).isEqualTo(username);
-        assertThat(actualFirstName).isEqualTo(firstName);
-        assertThat(actualLastName).isEqualTo(lastName);
-        assertThat(actualEmail).isEqualTo(email);
-        assertThat(actualAddr).isEqualTo(remoteAddr);
-
+        SuccessfulPutUpdateResponseModel updateResponce = step("Обновление данных пользователя через PUT", () -> {
+            PutUpdateBodyModel putUpdateBody = new PutUpdateBodyModel(username, firstName, lastName, email);
+            return given(requestSpec)
+                    .body(putUpdateBody)
+                    .auth().oauth2(loginResponse.access()) // ← автоматически добавит "Authorization: Bearer <token>"
+                    .when()
+                    .put("/users/me/")
+                    .then()
+                    .spec(successfulPutUpdateResponseSpec)
+                    .extract().as(SuccessfulPutUpdateResponseModel.class);
+        });
+        step("Проверка обновленных данных", () -> {
+            assertThat(updateResponce.username()).isEqualTo(username);
+            assertThat(updateResponce.firstName()).isEqualTo(firstName);
+            assertThat(updateResponce.lastName()).isEqualTo(lastName);
+            assertThat(updateResponce.email()).isEqualTo(email);
+        });
 
     }
 
     @Test
     public void wrongExceedUpdatePutTest() {
+
+
         RegistrationBodyModel registrationData = new RegistrationBodyModel(username, password);
 
         given(requestSpec)
