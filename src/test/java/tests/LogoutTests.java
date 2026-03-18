@@ -1,19 +1,13 @@
 package tests;
 
 import models.login.LoginBodyModel;
-import models.login.SuccessfulLoginResponseModel;
 import models.logout.EmptyOrNullLogoutResponseModel;
 import models.logout.InvalidLogoutTokenModel;
 import models.logout.LogoutBodyModel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static io.qameta.allure.Allure.step;
-import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
-import static spec.logOut.LogoutSpec.*;
-import static spec.login.LoginSpec.requestSpec;
-import static spec.login.LoginSpec.successfulLoginResponseSpec;
 
 
 public class LogoutTests extends TestBase {
@@ -27,76 +21,45 @@ public class LogoutTests extends TestBase {
     @Test
     @DisplayName("Успешный выход")
     public void successfulLogoutTest() {
-        SuccessfulLoginResponseModel loginResponse = step("Авторизоваться пользователем и получить токен", () -> {
-            LoginBodyModel loginData = new LoginBodyModel(username, password);
-            return given(logoutRequestSpec)
-                    .body(loginData)
-                    .when()
-                    .post("/auth/token/")
-                    .then()
-                    .spec(successfulLoginResponseSpec)
-                    .extract()
-                    .as(SuccessfulLoginResponseModel.class);
-        });
-        step("Выполнить логаут с refresh токеном", () -> {
-            String refreshToken = loginResponse.refresh();
-            LogoutBodyModel logoutData = new LogoutBodyModel(refreshToken);
-            given(logoutRequestSpec)
-                    .body(logoutData)
-                    .when()
-                    .post("/auth/logout/")
-                    .then()
-                    .spec(successfulLogoutResponseSpec);
+        LoginBodyModel loginData = new LoginBodyModel(username, password);
+        String refreshToken = api.auth.loginAndGetRefreshToken(loginData);
 
-        });
+        LogoutBodyModel logoutData = new LogoutBodyModel(refreshToken);
+        api.auth.logout(logoutData);
+
     }
 
     @Test
     @DisplayName("Передан невалидный токен")
     public void invalidTokenLogoutTest() {
-        InvalidLogoutTokenModel invalidToken = step(" Передаем невалидный токен ", () -> {
-            LogoutBodyModel logoutData = new LogoutBodyModel(badToken);
-            return given(requestSpec)
-                    .body(logoutData)
-                    .when()
-                    .post("/auth/logout/")
-                    .then()
-                    .spec(invalidLogoutResponseSpec)
-                    .extract().as(InvalidLogoutTokenModel.class);
-        });
+        LogoutBodyModel logoutData = new LogoutBodyModel(badToken);
+        InvalidLogoutTokenModel responceInvalidToken = api.auth.logoutWithInvalidToken(logoutData);
 
-        step("Проверить, ошибку 'Token is invalid '", () -> {
-            String expectedDetailError = "Token is invalid";
-            String expectedCodeError = "token_not_valid";
 
-            String actualDetailError = invalidToken.detail();
-            String actualCodeError = invalidToken.code();
+        String expectedDetailError = "Token is invalid";
+        String expectedCodeError = "token_not_valid";
 
-            assertThat(actualDetailError).isEqualTo(expectedDetailError);
-            assertThat(actualCodeError).isEqualTo(expectedCodeError);
-        });
+        String actualDetailError = responceInvalidToken.detail();
+        String actualCodeError = responceInvalidToken.code();
+
+        assertThat(actualDetailError).isEqualTo(expectedDetailError);
+        assertThat(actualCodeError).isEqualTo(expectedCodeError);
+
+
     }
 
     @Test
     @DisplayName("Передан пустой токен")
     public void emptyTokenLogoutTest() {
+        LogoutBodyModel logoutData = new LogoutBodyModel(emptyToken);
+        EmptyOrNullLogoutResponseModel responceInvalidToken = api.auth.invalidToken(logoutData);
 
-        EmptyOrNullLogoutResponseModel invalidToken = step(" Передаем пустой токен ", () -> {
-            LogoutBodyModel logoutData = new LogoutBodyModel(emptyToken);
-            return given(requestSpec)
-                    .body(logoutData)
-                    .when()
-                    .post("/auth/logout/")
-                    .then()
-                    .spec(emptyOrNullLogoutResponseSpec)
-                    .extract().as(EmptyOrNullLogoutResponseModel.class);
-        });
-        step("Проверить, что вернулась ошибка: 'This field may not be blank.'", () -> {
-            String expectedRefreshError = "This field may not be blank.";
-            String actualRefreshError = invalidToken.refresh().get(0);
 
-            assertThat(actualRefreshError).isEqualTo(expectedRefreshError);
-        });
+        String expectedRefreshError = "This field may not be blank.";
+        String actualRefreshError = responceInvalidToken.refresh().get(0);
+
+        assertThat(actualRefreshError).isEqualTo(expectedRefreshError);
+
     }
 
 }

@@ -54,17 +54,9 @@ public class UpdateUserTests extends TestBase {
 
     @Test
     public void successfulUpdatePutTest() { //todo сперва логинимся а потом делаем метод Put
+        RegistrationBodyModel registrationData = new RegistrationBodyModel(username, password);
+        SuccessfulRegistrationResponseModel registrationResponse = api.users.register(registrationData);
 
-        SuccessfulRegistrationResponseModel registrationResponse = step("Регистрация нового пользователя", () -> {
-            RegistrationBodyModel registrationData = new RegistrationBodyModel(username, password);
-            return given(requestSpec)
-                    .body(registrationData)
-                    .when()
-                    .post("/users/register/")
-                    .then()
-                    .spec(successfulRegistrationResponseSpec)
-                    .extract().as(SuccessfulRegistrationResponseModel.class);
-        });
         step("Проверка данных регистрации", () -> {
             assertThat(registrationResponse.id()).isGreaterThan(0);
             assertThat(registrationResponse.username()).isEqualTo(username);
@@ -77,31 +69,15 @@ public class UpdateUserTests extends TestBase {
             assertThat(registrationResponse.remoteAddr()).matches(ipAddrRegexp);
         });
 
-        SuccessfulLoginResponseModel loginResponse = step(" Авторизация и получение токена ", () -> {
-            LoginBodyModel loginData = new LoginBodyModel(username, password);
-            return given(requestSpec)
-                    .body(loginData)
-                    .when()
-                    .post("/auth/token/")
-                    .then()
-                    .spec(successfulLoginResponseSpec)
-                    .extract().as(SuccessfulLoginResponseModel.class);
-        });
+        LoginBodyModel loginData = new LoginBodyModel(username, password);
+        SuccessfulLoginResponseModel loginResponse = api.auth.login(loginData);
         step("Проверка, что access и refresh токены не совпадают", () -> {
             assertThat(loginResponse.access()).isNotEqualTo(loginResponse.refresh());
         });
 
-        SuccessfulPutUpdateResponseModel updateResponce = step("Обновление данных пользователя через PUT", () -> {
+
             PutUpdateBodyModel putUpdateBody = new PutUpdateBodyModel(username, firstName, lastName, email);
-            return given(requestSpec)
-                    .body(putUpdateBody)
-                    .auth().oauth2(loginResponse.access()) // ← автоматически добавит "Authorization: Bearer <token>"
-                    .when()
-                    .put("/users/me/")
-                    .then()
-                    .spec(successfulPutUpdateResponseSpec)
-                    .extract().as(SuccessfulPutUpdateResponseModel.class);
-        });
+            SuccessfulPutUpdateResponseModel updateResponce = api.users.update(putUpdateBody, loginResponse.access());
         step("Проверка обновленных данных", () -> {
             assertThat(updateResponce.username()).isEqualTo(username);
             assertThat(updateResponce.firstName()).isEqualTo(firstName);
