@@ -57,7 +57,7 @@ public class ClubsTests extends TestBase {
     }
 
     @Test
-    @DisplayName("Успешное создание клуба с авторизацией")
+    @DisplayName("Успешное создание клуба с авторизацией и проверка полей")
     public void successfulCreateClubTest() {
         SuccessfulLoginResponseModel loginResponse = api.auth.login(new LoginBodyModel(username, password));
         ClubCreateBodyModel createBody = ClubsTestData.randomClubCreateBody();
