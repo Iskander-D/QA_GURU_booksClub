@@ -4,8 +4,10 @@ import io.qameta.allure.Step;
 import models.clubs.ClubCreateBodyModel;
 import models.clubs.ClubPatchBodyModel;
 import models.clubs.ClubModel;
+import models.clubs.ClubReviewModel;
 import models.clubs.ClubUpdateBodyModel;
 import models.clubs.ClubsListResponseModel;
+import models.clubs.UnauthorizedGetClubReviewResponseModel;
 import models.clubs.UnauthorizedClubCreateResponseModel;
 
 import static io.restassured.RestAssured.given;
@@ -90,5 +92,26 @@ public class ClubsApiClient {
                 .delete("/clubs/" + clubId + "/")
                 .then()
                 .spec(successfulDeleteClubResponseSpec);
+    }
+
+    @Step("Получить отзыв по id с авторизацией")
+    public ClubReviewModel getClubReviewById(int reviewId, String accessToken) {
+        return given(requestSpec)
+                .auth().oauth2(accessToken)
+                .when()
+                .get("/clubs/reviews/" + reviewId + "/")
+                .then()
+                .spec(successfulGetClubReviewResponseSpec)
+                .extract().as(ClubReviewModel.class);
+    }
+
+    @Step("Попытаться получить отзыв по id без авторизации")
+    public UnauthorizedGetClubReviewResponseModel getClubReviewByIdWithoutAuth(int reviewId) {
+        return given(requestSpec)
+                .when()
+                .get("/clubs/reviews/" + reviewId + "/")
+                .then()
+                .spec(unauthorizedGetClubReviewResponseSpec)
+                .extract().as(UnauthorizedGetClubReviewResponseModel.class);
     }
 }

@@ -155,4 +155,46 @@ public class ClubsTests extends TestBase {
             assertThat(patchResponse.detail()).isEqualTo("Authentication credentials were not provided.");
         });
     }
+
+    @Test
+    @DisplayName("Успешное получение отзыва клуба по id с авторизацией")
+    public void successfulGetClubReviewByIdWithAuthTest() {
+        SuccessfulLoginResponseModel loginResponse = api.auth.login(new LoginBodyModel(username, password));
+        ClubReviewModel expectedReview = getAnyExistingReview();
+
+        ClubReviewModel actualReview = api.clubs.getClubReviewById(expectedReview.id(), loginResponse.access());
+
+        step("Проверка полей полученного отзыва", () -> {
+            assertThat(actualReview.id()).isEqualTo(expectedReview.id());
+            assertThat(actualReview.club()).isEqualTo(expectedReview.club());
+            assertThat(actualReview.user()).isNotNull();
+            assertThat(actualReview.user().id()).isGreaterThan(0);
+            assertThat(actualReview.user().username()).isNotBlank();
+            assertThat(actualReview.review()).isNotBlank();
+            assertThat(actualReview.assessment()).isBetween(1, 5);
+            assertThat(actualReview.readPages()).isGreaterThanOrEqualTo(0);
+        });
+    }
+
+    @Test
+    @DisplayName("Неуспешное получение отзыва клуба по id без авторизации")
+    public void unauthorizedGetClubReviewByIdTest() {
+        ClubReviewModel existingReview = getAnyExistingReview();
+
+        UnauthorizedGetClubReviewResponseModel response =
+                api.clubs.getClubReviewByIdWithoutAuth(existingReview.id());
+
+        step("Проверка текста ошибки", () -> {
+            assertThat(response.detail()).isEqualTo("Authentication credentials were not provided.");
+        });
+    }
+
+    private ClubReviewModel getAnyExistingReview() {
+        ClubsListResponseModel clubsResponse = api.clubs.getClubs();
+
+        return step("Поиск существующего отзыва клуба для теста", () -> clubsResponse.results().stream()
+                .flatMap(club -> club.reviews().stream())
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("В выдаче клубов нет отзывов для проверки /clubs/reviews/{id}/")));
+    }
 }

@@ -62,4 +62,21 @@ public class ClubsSpec {
             .expectBody(matchesJsonSchemaInClasspath("schemas/clubs/unauthorized_create_club_response_schema.json"))
             .expectBody("detail", notNullValue())
             .build();
+
+    public static ResponseSpecification successfulGetClubReviewResponseSpec = new ResponseSpecBuilder()
+            .log(ALL)
+            .expectStatusCode(200)
+            .expectBody(matchesJsonSchemaInClasspath("schemas/clubs/successful_get_club_review_response_schema.json"))
+            .expectBody("id", notNullValue())
+            .expectBody("club", notNullValue())
+            .expectBody("user", notNullValue())
+            .expectBody("review", notNullValue())
+            .build();
+
+    public static ResponseSpecification unauthorizedGetClubReviewResponseSpec = new ResponseSpecBuilder()
+            .log(ALL)
+            .expectStatusCode(401)
+            .expectBody(matchesJsonSchemaInClasspath("schemas/clubs/unauthorized_get_club_review_response_schema.json"))
+            .expectBody("detail", notNullValue())
+            .build();
 }
