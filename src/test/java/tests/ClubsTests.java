@@ -1,5 +1,6 @@
 package tests;
 
+import io.qameta.allure.Step;
 import models.clubs.*;
 import models.login.LoginBodyModel;
 import models.login.SuccessfulLoginResponseModel;
@@ -156,6 +157,19 @@ public class ClubsTests extends TestBase {
         });
     }
 
+
+
+    @Step ("Получить любой существующий отзыв клуба для тестов /clubs/reviews/{id}/")
+    private ClubReviewModel getAnyExistingReview() {
+        ClubsListResponseModel clubsResponse = api.clubs.getClubs();
+
+        return step("Поиск существующего отзыва клуба для теста", () ->
+                clubsResponse.results().stream()
+                             .flatMap(club -> club.reviews().stream())
+                             .findFirst()
+                             .orElseThrow(() -> new AssertionError("В выдаче клубов нет отзывов для проверки /clubs/reviews/{id}/")));
+    }
+
     @Test
     @DisplayName("Успешное получение отзыва клуба по id с авторизацией")
     public void successfulGetClubReviewByIdWithAuthTest() {
@@ -189,12 +203,5 @@ public class ClubsTests extends TestBase {
         });
     }
 
-    private ClubReviewModel getAnyExistingReview() {
-        ClubsListResponseModel clubsResponse = api.clubs.getClubs();
 
-        return step("Поиск существующего отзыва клуба для теста", () -> clubsResponse.results().stream()
-                .flatMap(club -> club.reviews().stream())
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("В выдаче клубов нет отзывов для проверки /clubs/reviews/{id}/")));
-    }
 }
