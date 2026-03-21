@@ -2,6 +2,7 @@ package api;
 
 import io.qameta.allure.Step;
 import models.clubs.ClubCreateBodyModel;
+import models.clubs.ClubModel;
 import models.clubs.ClubsListResponseModel;
 import models.clubs.UnauthorizedClubCreateResponseModel;
 
@@ -30,5 +31,17 @@ public class ClubsApiClient {
                 .then()
                 .spec(unauthorizedCreateClubResponseSpec)
                 .extract().as(UnauthorizedClubCreateResponseModel.class);
+    }
+
+    @Step("Создать клуб с авторизацией")
+    public ClubModel createClub(ClubCreateBodyModel clubCreateBodyModel, String accessToken) {
+        return given(requestSpec)
+                .body(clubCreateBodyModel)
+                .auth().oauth2(accessToken)
+                .when()
+                .post("/clubs/")
+                .then()
+                .spec(successfulCreateClubResponseSpec)
+                .extract().as(ClubModel.class);
     }
 }
