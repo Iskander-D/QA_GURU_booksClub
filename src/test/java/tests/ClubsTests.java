@@ -1,21 +1,22 @@
 package tests;
 
 import models.clubs.ClubCreateBodyModel;
+import models.clubs.ClubPatchBodyModel;
 import models.clubs.ClubModel;
+import models.clubs.ClubUpdateBodyModel;
 import models.clubs.ClubsListResponseModel;
 import models.clubs.UnauthorizedClubCreateResponseModel;
 import models.login.LoginBodyModel;
 import models.login.SuccessfulLoginResponseModel;
-import net.datafaker.Faker;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import testdata.ClubsTestData;
 
 import static io.qameta.allure.Allure.step;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ClubsTests extends TestBase {
 
-    private final Faker faker = new Faker();
     private final String username = "qaguru";
     private final String password = "qaguru123";
 
@@ -46,13 +47,7 @@ public class ClubsTests extends TestBase {
     @Test
     @DisplayName("Неуспешное создание клуба без авторизации")
     public void unauthorizedCreateClubTest() {
-        ClubCreateBodyModel createBody = new ClubCreateBodyModel(
-                faker.book().title(),
-                faker.book().author(),
-                2024,
-                faker.lorem().sentence(),
-                "https://t.me/qa_guru_bookclub"
-        );
+        ClubCreateBodyModel createBody = ClubsTestData.randomClubCreateBody();
 
         UnauthorizedClubCreateResponseModel createResponse = api.clubs.createClubWithoutAuth(createBody);
 
@@ -65,13 +60,7 @@ public class ClubsTests extends TestBase {
     @DisplayName("Успешное создание клуба с авторизацией")
     public void successfulCreateClubTest() {
         SuccessfulLoginResponseModel loginResponse = api.auth.login(new LoginBodyModel(username, password));
-        ClubCreateBodyModel createBody = new ClubCreateBodyModel(
-                faker.book().title(),
-                faker.book().author(),
-                2025,
-                faker.lorem().sentence(),
-                "https://t.me/qa_guru_bookclub"
-        );
+        ClubCreateBodyModel createBody = ClubsTestData.randomClubCreateBody();
 
         ClubModel createdClub = api.clubs.createClub(createBody, loginResponse.access());
 
@@ -92,20 +81,8 @@ public class ClubsTests extends TestBase {
     public void createClubTwiceDifferentIdTest() {
         SuccessfulLoginResponseModel loginResponse = api.auth.login(new LoginBodyModel(username, password));
 
-        ClubCreateBodyModel firstBody = new ClubCreateBodyModel(
-                "QA Club " + faker.number().digits(4),
-                faker.book().author(),
-                2022,
-                faker.lorem().sentence(),
-                "https://t.me/qa_guru_bookclub"
-        );
-        ClubCreateBodyModel secondBody = new ClubCreateBodyModel(
-                "QA Club " + faker.number().digits(4),
-                faker.book().author(),
-                2023,
-                faker.lorem().sentence(),
-                "https://t.me/qa_guru_bookclub"
-        );
+        ClubCreateBodyModel firstBody = ClubsTestData.randomClubCreateBody();
+        ClubCreateBodyModel secondBody = ClubsTestData.randomClubCreateBody();
 
         ClubModel firstClub = api.clubs.createClub(firstBody, loginResponse.access());
         ClubModel secondClub = api.clubs.createClub(secondBody, loginResponse.access());
@@ -114,6 +91,57 @@ public class ClubsTests extends TestBase {
             assertThat(firstClub.id()).isGreaterThan(0);
             assertThat(secondClub.id()).isGreaterThan(0);
             assertThat(secondClub.id()).isNotEqualTo(firstClub.id());
+        });
+    }
+
+    @Test
+    @DisplayName("Успешное обновление клуба методом PUT")
+    public void successfulUpdateClubPutTest() {
+        SuccessfulLoginResponseModel loginResponse = api.auth.login(new LoginBodyModel(username, password));
+        ClubModel createdClub = api.clubs.createClub(ClubsTestData.randomClubCreateBody(), loginResponse.access());
+        ClubUpdateBodyModel putBody = ClubsTestData.randomClubPutBody();
+
+        ClubModel updatedClub = api.clubs.updateClubPut(createdClub.id(), putBody, loginResponse.access());
+
+        step("Проверка полей после PUT", () -> {
+            assertThat(updatedClub.id()).isEqualTo(createdClub.id());
+            assertThat(updatedClub.bookTitle()).isEqualTo(putBody.bookTitle());
+            assertThat(updatedClub.bookAuthors()).isEqualTo(putBody.bookAuthors());
+            assertThat(updatedClub.publicationYear()).isEqualTo(putBody.publicationYear());
+            assertThat(updatedClub.description()).isEqualTo(putBody.description());
+            assertThat(updatedClub.telegramChatLink()).isEqualTo(putBody.telegramChatLink());
+        });
+    }
+
+    @Test
+    @DisplayName("Успешное частичное обновление клуба методом PATCH")
+    public void successfulUpdateClubPatchTest() {
+        SuccessfulLoginResponseModel loginResponse = api.auth.login(new LoginBodyModel(username, password));
+        ClubModel createdClub = api.clubs.createClub(ClubsTestData.randomClubCreateBody(), loginResponse.access());
+        ClubPatchBodyModel patchBody = ClubsTestData.randomClubPatchBody();
+
+        ClubModel patchedClub = api.clubs.updateClubPatch(createdClub.id(), patchBody, loginResponse.access());
+
+        step("Проверка измененных полей после PATCH", () -> {
+            assertThat(patchedClub.id()).isEqualTo(createdClub.id());
+            assertThat(patchedClub.bookTitle()).isEqualTo(patchBody.bookTitle());
+            assertThat(patchedClub.description()).isEqualTo(patchBody.description());
+        });
+    }
+
+    @Test
+    @DisplayName("Успешное удаление клуба методом DELETE")
+    public void successfulDeleteClubTest() {
+        SuccessfulLoginResponseModel loginResponse = api.auth.login(new LoginBodyModel(username, password));
+        ClubModel createdClub = api.clubs.createClub(ClubsTestData.randomClubCreateBody(), loginResponse.access());
+
+        api.clubs.deleteClub(createdClub.id(), loginResponse.access());
+        ClubsListResponseModel clubsAfterDelete = api.clubs.getClubs();
+
+        step("Проверка, что удаленный клуб отсутствует в выдаче", () -> {
+            assertThat(clubsAfterDelete.results())
+                    .extracting(ClubModel::id)
+                    .doesNotContain(createdClub.id());
         });
     }
 }

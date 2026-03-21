@@ -32,4 +32,27 @@ public class ClubsSpec {
             .expectBody("bookTitle", notNullValue())
             .expectBody("bookAuthors", notNullValue())
             .build();
+
+    public static ResponseSpecification successfulPutClubResponseSpec = new ResponseSpecBuilder()
+            .log(ALL)
+            .expectStatusCode(200)
+            .expectBody(matchesJsonSchemaInClasspath("schemas/clubs/successful_create_club_response_schema.json"))
+            .expectBody("id", notNullValue())
+            .expectBody("bookTitle", notNullValue())
+            .expectBody("bookAuthors", notNullValue())
+            .build();
+
+    public static ResponseSpecification successfulPatchClubResponseSpec = new ResponseSpecBuilder()
+            .log(ALL)
+            .expectStatusCode(200)
+            .expectBody(matchesJsonSchemaInClasspath("schemas/clubs/successful_create_club_response_schema.json"))
+            .expectBody("id", notNullValue())
+            .expectBody("bookTitle", notNullValue())
+            .expectBody("bookAuthors", notNullValue())
+            .build();
+
+    public static ResponseSpecification successfulDeleteClubResponseSpec = new ResponseSpecBuilder()
+            .log(ALL)
+            .expectStatusCode(204)
+            .build();
 }
