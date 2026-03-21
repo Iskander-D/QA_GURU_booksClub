@@ -55,4 +55,11 @@ public class ClubsSpec {
             .log(ALL)
             .expectStatusCode(204)
             .build();
+
+    public static ResponseSpecification unauthorizedPatchClubResponseSpec = new ResponseSpecBuilder()
+            .log(ALL)
+            .expectStatusCode(401)
+            .expectBody(matchesJsonSchemaInClasspath("schemas/clubs/unauthorized_create_club_response_schema.json"))
+            .expectBody("detail", notNullValue())
+            .build();
 }

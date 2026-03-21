@@ -144,4 +144,19 @@ public class ClubsTests extends TestBase {
                     .doesNotContain(createdClub.id());
         });
     }
+
+    @Test
+    @DisplayName("Неуспешное обновление клуба методом PATCH без авторизации")
+    public void unauthorizedUpdateClubPatchTest() {
+        SuccessfulLoginResponseModel loginResponse = api.auth.login(new LoginBodyModel(username, password));
+        ClubModel createdClub = api.clubs.createClub(ClubsTestData.randomClubCreateBody(), loginResponse.access());
+        ClubPatchBodyModel patchBody = ClubsTestData.randomClubPatchBody();
+
+        UnauthorizedClubCreateResponseModel patchResponse =
+                api.clubs.updateClubPatchWithoutAuth(createdClub.id(), patchBody);
+
+        step("Проверка текста ошибки", () -> {
+            assertThat(patchResponse.detail()).isEqualTo("Authentication credentials were not provided.");
+        });
+    }
 }

@@ -71,6 +71,17 @@ public class ClubsApiClient {
                 .extract().as(ClubModel.class);
     }
 
+    @Step("Попытаться обновить клуб методом PATCH без авторизации")
+    public UnauthorizedClubCreateResponseModel updateClubPatchWithoutAuth(int clubId, ClubPatchBodyModel patchBody) {
+        return given(requestSpec)
+                .body(patchBody)
+                .when()
+                .patch("/clubs/" + clubId + "/")
+                .then()
+                .spec(unauthorizedPatchClubResponseSpec)
+                .extract().as(UnauthorizedClubCreateResponseModel.class);
+    }
+
     @Step("Удалить клуб")
     public void deleteClub(int clubId, String accessToken) {
         given(requestSpec)
