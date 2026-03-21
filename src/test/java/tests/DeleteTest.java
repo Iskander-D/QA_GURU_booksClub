@@ -22,7 +22,7 @@ public class DeleteTest extends TestBase {
 
     @BeforeEach
     public void prepareTestData() {
-        Faker faker = new Faker();
+
         username = faker.name().firstName();
         password = faker.name().firstName();
     }

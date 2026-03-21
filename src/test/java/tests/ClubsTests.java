@@ -1,11 +1,6 @@
 package tests;
 
-import models.clubs.ClubCreateBodyModel;
-import models.clubs.ClubPatchBodyModel;
-import models.clubs.ClubModel;
-import models.clubs.ClubUpdateBodyModel;
-import models.clubs.ClubsListResponseModel;
-import models.clubs.UnauthorizedClubCreateResponseModel;
+import models.clubs.*;
 import models.login.LoginBodyModel;
 import models.login.SuccessfulLoginResponseModel;
 import org.junit.jupiter.api.DisplayName;
@@ -16,6 +11,7 @@ import static io.qameta.allure.Allure.step;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ClubsTests extends TestBase {
+
 
     private final String username = "qaguru";
     private final String password = "qaguru123";
@@ -118,8 +114,8 @@ public class ClubsTests extends TestBase {
     public void successfulUpdateClubPatchTest() {
         SuccessfulLoginResponseModel loginResponse = api.auth.login(new LoginBodyModel(username, password));
         ClubModel createdClub = api.clubs.createClub(ClubsTestData.randomClubCreateBody(), loginResponse.access());
-        ClubPatchBodyModel patchBody = ClubsTestData.randomClubPatchBody();
 
+        ClubPatchBodyModel patchBody = ClubsTestData.randomClubPatchBody();
         ClubModel patchedClub = api.clubs.updateClubPatch(createdClub.id(), patchBody, loginResponse.access());
 
         step("Проверка измененных полей после PATCH", () -> {

@@ -2,10 +2,14 @@ package tests;
 
 import api.ApiClient;
 import io.restassured.RestAssured;
+import net.datafaker.Faker;
 import org.junit.jupiter.api.BeforeAll;
+
+import java.util.Locale;
 
 public class TestBase {
     ApiClient  api = new ApiClient();
+    Faker faker = new Faker(Locale.CANADA);
 
     @BeforeAll
     public static void setUp() {

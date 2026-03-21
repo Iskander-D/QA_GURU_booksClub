@@ -36,7 +36,7 @@ public class UpdateUserTests extends TestBase {
 
     @BeforeEach
     public void prepareTestData() {
-        Faker faker = new Faker(Locale.CANADA);
+
         username = faker.name().firstName();
         password = faker.name().firstName();
         firstName = faker.name().firstName();
