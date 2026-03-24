@@ -22,7 +22,7 @@ public class RegistrationTests extends TestBase {
     public void prepareTestData() {
 
         username = faker.name().firstName();
-        password = faker.name().firstName();
+        password = faker.credentials().password();
     }
 
     // todo move to specs
