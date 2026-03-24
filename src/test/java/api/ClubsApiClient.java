@@ -105,13 +105,13 @@ public class ClubsApiClient {
                 .extract().as(ClubReviewModel.class);
     }
 
-    @Step("Попытаться получить отзыв по id без авторизации")
-    public UnauthorizedGetClubReviewResponseModel getClubReviewByIdWithoutAuth(int reviewId) {
+    @Step("Получить отзыв по id без авторизации")
+    public ClubReviewModel getClubReviewByIdWithoutAuth(int reviewId) {
         return given(requestSpec)
                 .when()
                 .get("/clubs/reviews/" + reviewId + "/")
                 .then()
-                .spec(unauthorizedGetClubReviewResponseSpec)
-                .extract().as(UnauthorizedGetClubReviewResponseModel.class);
+                .spec(successfulGetClubReviewResponseSpec)
+                .extract().as(ClubReviewModel.class);
     }
 }

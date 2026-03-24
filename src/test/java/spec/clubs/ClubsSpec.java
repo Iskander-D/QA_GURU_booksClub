@@ -73,6 +73,7 @@ public class ClubsSpec {
             .expectBody("review", notNullValue())
             .build();
 
+
     public static ResponseSpecification unauthorizedGetClubReviewResponseSpec = new ResponseSpecBuilder()
             .log(ALL)
             .expectStatusCode(401)

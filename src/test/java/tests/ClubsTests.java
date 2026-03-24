@@ -214,19 +214,25 @@ public class ClubsTests extends TestBase {
             });
         }
 
-        @Test
-        @DisplayName("Неуспешное получение отзыва клуба по id без авторизации")
-        public void unauthorizedGetClubReviewByIdTest () {
-            api.users.register(new RegistrationBodyModel(username, password));
+    @Test
+    @DisplayName("Успешное получение отзыва клуба по id без авторизации")
+    public void successfulGetClubReviewByIdWithoutAuthTest () {
+        api.users.register(new RegistrationBodyModel(username, password));
 
-        ClubReviewModel existingReview = getAnyExistingReview();
+        ClubReviewModel expectedReview = getAnyExistingReview();
 
-            UnauthorizedGetClubReviewResponseModel response =
-                    api.clubs.getClubReviewByIdWithoutAuth(existingReview.id());
+        ClubReviewModel actualReview = api.clubs.getClubReviewByIdWithoutAuth(expectedReview.id());
 
-            step("Проверка текста ошибки", () -> {
-                assertThat(response.detail()).isEqualTo("Authentication credentials were not provided.");
-            });
+        step("Проверка полей полученного отзыва без авторизации", () -> {
+            assertThat(actualReview.id()).isEqualTo(expectedReview.id());
+            assertThat(actualReview.club()).isEqualTo(expectedReview.club());
+            assertThat(actualReview.user()).isNotNull();
+            assertThat(actualReview.user().id()).isGreaterThan(0);
+            assertThat(actualReview.user().username()).isNotBlank();
+            assertThat(actualReview.review()).isNotBlank();
+            assertThat(actualReview.assessment()).isBetween(1, 5);
+            assertThat(actualReview.readPages()).isGreaterThanOrEqualTo(0);
+        });
         }
 
 
