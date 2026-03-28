@@ -3,13 +3,13 @@ package models.clubs;
 import java.util.List;
 
 public record ClubModel(
-        int id,
+        Integer id,
         String bookTitle,
         String bookAuthors,
-        int publicationYear,
+        Integer publicationYear,
         String description,
         String telegramChatLink,
-        int owner,
+        Integer owner,
         List<Integer> members,
         List<ClubReviewModel> reviews,
         String created,

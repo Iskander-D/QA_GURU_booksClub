@@ -14,7 +14,8 @@ def allureVersion = "2.21.0",
     datafakerVersion = "2.5.4",
     assertjVersion = "3.27.7",
     junitVersion = "5.14.3",
-    slf4jVersion = "2.0.7"
+    slf4jVersion = "2.0.7",
+    selenideVersion = "7.13.0"
 
 
 
@@ -50,6 +51,7 @@ dependencies {
     testImplementation "net.datafaker:datafaker:$datafakerVersion"
     testImplementation "org.assertj:assertj-core:$assertjVersion"
     testImplementation "org.junit.jupiter:junit-jupiter:$junitVersion"
+    testImplementation "com.codeborne:selenide:$selenideVersion"
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
