@@ -13,6 +13,7 @@ public class ClubPage {
     private final SelenideElement clubContent = element(".club-content");
     private final SelenideElement leaveButton = element(".leave-btn");
     private final SelenideElement errorMessage = element(".error");
+    private final SelenideElement reviewerName = element(".reviewer-name");
 
     @Step("Проверить, что контент клуба отображается")
     public ClubPage checkVisible() {
@@ -30,5 +31,16 @@ public class ClubPage {
     @Step("Проверить текст ошибки: {expectedText}")
     public void checkError(String expectedText) {
         errorMessage.shouldHave(text(expectedText));
+    }
+
+    @Step("Проверить имя рецензента: {name}")
+    public void checkReviewerName(String name) {
+        reviewerName.shouldHave(text(name));
+    }
+
+    @Step("Проверить, что в карточке клуба виден фрагмент текста отзыва: {snippet}")
+    public ClubPage checkReviewSnippetVisible(String snippet) {
+        clubContent.shouldHave(text(snippet));
+        return this;
     }
 }

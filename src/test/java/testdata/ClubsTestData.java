@@ -2,6 +2,7 @@ package testdata;
 
 import models.clubs.ClubCreateBodyModel;
 import models.clubs.ClubPatchBodyModel;
+import models.clubs.ClubReviewWriteBodyModel;
 import models.clubs.ClubUpdateBodyModel;
 import net.datafaker.Faker;
 
@@ -33,6 +34,15 @@ public class ClubsTestData {
         return new ClubPatchBodyModel(
                 "PATCH Club " + FAKER.number().digits(4),
                 FAKER.lorem().sentence()
+        );
+    }
+
+    public static ClubReviewWriteBodyModel randomClubReviewBody(int clubId) {
+        return new ClubReviewWriteBodyModel(
+                clubId,
+                FAKER.lorem().paragraph(2),
+                FAKER.number().numberBetween(1, 5),
+                FAKER.number().numberBetween(1, 500)
         );
     }
 }

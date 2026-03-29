@@ -1,7 +1,14 @@
 package tests;
 
 import io.qameta.allure.Step;
-import models.clubs.*;
+import models.clubs.ClubCreateBodyModel;
+import models.clubs.ClubModel;
+import models.clubs.ClubPatchBodyModel;
+import models.clubs.ClubReviewModel;
+import models.clubs.ClubReviewWriteBodyModel;
+import models.clubs.ClubUpdateBodyModel;
+import models.clubs.ClubsListResponseModel;
+import models.clubs.UnauthorizedClubCreateResponseModel;
 import models.login.LoginBodyModel;
 import models.login.SuccessfulLoginResponseModel;
 import models.registration.RegistrationBodyModel;
@@ -177,6 +184,81 @@ public class ClubsTests extends TestBase {
 
             step("Проверка текста ошибки", () -> {
                 assertThat(patchResponse.detail()).isEqualTo("Authentication credentials were not provided.");
+            });
+        }
+
+        @Test
+        @DisplayName("Успешное создание отзыва (POST) и обновление (PUT) с рандомными данными")
+        public void successfulCreateAndUpdateClubReviewTest() {
+            api.users.register(new RegistrationBodyModel(username, password));
+
+            SuccessfulLoginResponseModel loginResponse = api.auth.login(new LoginBodyModel(username, password));
+            ClubModel club = api.clubs.createClub(ClubsTestData.randomClubCreateBody(), loginResponse.access());
+
+            ClubReviewWriteBodyModel createBody = ClubsTestData.randomClubReviewBody(club.id());
+            ClubReviewModel created = api.clubs.createClubReview(createBody, loginResponse.access());
+
+            step("Проверка полей созданного отзыва", () -> {
+                assertThat(created.id()).isGreaterThan(0);
+                assertThat(created.club()).isEqualTo(club.id());
+                assertThat(created.review()).isEqualTo(createBody.review());
+                assertThat(created.assessment()).isEqualTo(createBody.assessment());
+                assertThat(created.readPages()).isEqualTo(createBody.readPages());
+            });
+
+            ClubReviewWriteBodyModel putBody = ClubsTestData.randomClubReviewBody(club.id());
+            ClubReviewModel updated = api.clubs.updateClubReviewPut(created.id(), putBody, loginResponse.access());
+
+            step("Проверка полей после PUT /clubs/reviews/{id}/", () -> {
+                assertThat(updated.id()).isEqualTo(created.id());
+                assertThat(updated.club()).isEqualTo(club.id());
+                assertThat(updated.review()).isEqualTo(putBody.review());
+                assertThat(updated.assessment()).isEqualTo(putBody.assessment());
+                assertThat(updated.readPages()).isEqualTo(putBody.readPages());
+            });
+        }
+
+        @Test
+        @DisplayName("Успешное удаление отзыва DELETE /clubs/reviews/{id}/")
+        public void successfulDeleteClubReviewTest() {
+            api.users.register(new RegistrationBodyModel(username, password));
+
+            SuccessfulLoginResponseModel loginResponse = api.auth.login(new LoginBodyModel(username, password));
+            ClubModel club = api.clubs.createClub(ClubsTestData.randomClubCreateBody(), loginResponse.access());
+            ClubReviewModel created = api.clubs.createClubReview(
+                    ClubsTestData.randomClubReviewBody(club.id()),
+                    loginResponse.access()
+            );
+
+            api.clubs.deleteClubReview(created.id(), loginResponse.access());
+
+            step("Проверка, что отзыва нет в выдаче клубов", () -> {
+                assertThat(api.clubs.getClubs().results().stream()
+                        .flatMap(c -> c.reviews().stream())
+                        .map(ClubReviewModel::id)
+                        .toList())
+                        .doesNotContain(created.id());
+            });
+        }
+
+        @Test
+        @DisplayName("Неуспешное обновление отзыва PUT без авторизации")
+        public void unauthorizedUpdateClubReviewPutTest() {
+            api.users.register(new RegistrationBodyModel(username, password));
+
+            SuccessfulLoginResponseModel loginResponse = api.auth.login(new LoginBodyModel(username, password));
+            ClubModel club = api.clubs.createClub(ClubsTestData.randomClubCreateBody(), loginResponse.access());
+            ClubReviewModel created = api.clubs.createClubReview(
+                    ClubsTestData.randomClubReviewBody(club.id()),
+                    loginResponse.access()
+            );
+
+            ClubReviewWriteBodyModel putBody = ClubsTestData.randomClubReviewBody(club.id());
+            UnauthorizedClubCreateResponseModel response =
+                    api.clubs.updateClubReviewPutWithoutAuth(created.id(), putBody);
+
+            step("Проверка текста ошибки", () -> {
+                assertThat(response.detail()).isEqualTo("Authentication credentials were not provided.");
             });
         }
 
