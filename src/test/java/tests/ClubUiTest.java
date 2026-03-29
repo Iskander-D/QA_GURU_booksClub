@@ -11,20 +11,21 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import testdata.ClubsTestData;
 
-import static com.codeborne.selenide.Condition.text;
-import static com.codeborne.selenide.Condition.visible;
-import static com.codeborne.selenide.Selenide.*;
+import static com.codeborne.selenide.Selenide.open;
 
 public class ClubUiTest extends TestBase {
 
     String username;
     String password;
+    String correctUsername;
+
 
     @BeforeEach
     public void prepareTestData() {
 
         username = faker.name().firstName();
         password = "12345";
+        correctUsername = "wilkinso";
     }
 
     @Test
@@ -37,17 +38,42 @@ public class ClubUiTest extends TestBase {
         ClubModel createdClub = api.clubs.createClub(createBody, loginResponse.access());
         String clubId = createdClub.id().toString();
 
-
         open("/favicon.ico");
         AuthHelper.loginAndSetLocalStorage(registrationResponse, loginResponse);
         open("/clubs/" + clubId);
 
-        // cant leave club as owner
-        $(".club-content").shouldBe(visible);
-        $(".leave-btn").click();
-        confirm();
-        $(".error").shouldHave(text("Не удалось покинуть клуб"));
+        clubPage.checkVisible()
+                .leaveClub()
+                .checkError("Не удалось покинуть клуб");
+
     }
+
+
+    @Test
+    public void cantLeaveClubAsClubOwnerWithoutRegistrationTest() {
+        SuccessfulLoginResponseModel loginResponse = api.auth.login(new LoginBodyModel(correctUsername, password));
+
+        ClubCreateBodyModel createBody = ClubsTestData.randomClubCreateBody();
+        ClubModel createdClub = api.clubs.createClub(createBody, loginResponse.access());
+        String clubId = createdClub.id().toString();
+
+        open("/favicon.ico");
+        AuthHelper.loginAndSetLocalStorage(loginResponse, correctUsername);
+        open("/clubs/" + clubId);
+
+        clubPage.checkVisible()
+                .leaveClub()
+                .checkError("Не удалось покинуть клуб");
+    }
+
+
 }
+
+
+
+
+
+
+
 
 

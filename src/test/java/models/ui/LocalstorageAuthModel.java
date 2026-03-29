@@ -1,4 +1,4 @@
-package models.clubs;
+package models.ui;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

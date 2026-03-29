@@ -2,75 +2,78 @@ package helpers;
 
 import com.codeborne.selenide.Selenide;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import models.clubs.LocalstorageAuthModel;
+import io.qameta.allure.Step;
 import models.login.SuccessfulLoginResponseModel;
 import models.registration.SuccessfulRegistrationResponseModel;
+import models.ui.LocalstorageAuthModel;
 
 public class AuthHelper {
 
     private static final String STORAGE_KEY = "book_club_auth";
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper mapper = new ObjectMapper();
 
-    /**
-     * Основной удобный метод — полностью заменяет весь блок с localStorageAuthBody
-     */
+    // ====================== Основные публичные методы ======================
+
+    @Step("Авторизация через API + localStorage (после регистрации)")
     public static void loginAndSetLocalStorage(SuccessfulRegistrationResponseModel regResponse,
                                                SuccessfulLoginResponseModel loginResponse) {
 
-        LocalstorageAuthModel.BookClubAuth auth = buildAuthModel(regResponse, loginResponse);
-        setLocalStorageAuth(auth);
-    }
-
-    /**
-     * Перегруженный метод — если у тебя нет registrationResponse
-     */
-    public static void loginAndSetLocalStorage(SuccessfulLoginResponseModel loginResponse, String username) {
-        LocalstorageAuthModel.BookClubAuth auth = buildAuthModel(loginResponse, username);
-        setLocalStorageAuth(auth);
-    }
-
-    private static LocalstorageAuthModel.BookClubAuth buildAuthModel(SuccessfulRegistrationResponseModel reg,
-                                                                     SuccessfulLoginResponseModel login) {
-        return new LocalstorageAuthModel.BookClubAuth(
+        var auth = new LocalstorageAuthModel.BookClubAuth(
                 new LocalstorageAuthModel.User(
-                        reg.id(),
-                        reg.username(),
-                        reg.firstName(),
-                        reg.lastName(),
-                        reg.email(),
-                        reg.remoteAddr()
+                        regResponse.id(),
+                        regResponse.username(),
+                        regResponse.firstName(),
+                        regResponse.lastName(),
+                        regResponse.email(),
+                        regResponse.remoteAddr()
                 ),
-                login.access(),
-                login.refresh(),
+                loginResponse.access(),
+                loginResponse.refresh(),
                 true
         );
+
+        setToLocalStorage(auth);        // ← один универсальный метод
     }
 
-    private static LocalstorageAuthModel.BookClubAuth buildAuthModel(SuccessfulLoginResponseModel login, String username) {
-        return new LocalstorageAuthModel.BookClubAuth(
+    @Step("Авторизация через API + localStorage для ранее зарегистрированного пользователя {username}")
+    public static void loginAndSetLocalStorage(SuccessfulLoginResponseModel loginResponse,
+                                               String username) {
+
+        var auth = new LocalstorageAuthModel.BookClubAuth(
                 new LocalstorageAuthModel.User(
-                        null,           // id можно взять из loginResponse, если есть
+                        null,
                         username,
                         "",
                         "",
                         username + "@test.com",
                         ""
                 ),
-                login.access(),
-                login.refresh(),
+                loginResponse.access(),
+                loginResponse.refresh(),
                 true
         );
+
+        setToLocalStorage(auth);        // ← тот же самый метод
     }
 
-    private static void setLocalStorageAuth(LocalstorageAuthModel.BookClubAuth auth) {
+
+    // ====================== Универсальный метод сохранения ======================
+
+    /**
+     * Один метод, который отвечает только за сохранение в localStorage.
+     * Используется обоими публичными методами.
+     */
+    private static void setToLocalStorage(LocalstorageAuthModel.BookClubAuth auth) {
         try {
-            String json = objectMapper.writeValueAsString(auth);
+            String json = mapper.writeValueAsString(auth);
+
             Selenide.localStorage().setItem(STORAGE_KEY, json);
             Selenide.refresh();                    // обязательно!
 
-            System.out.println("✅ Авторизация через API + localStorage выполнена успешно");
+            System.out.println("✅ localStorage 'book_club_auth' успешно установлен");
         } catch (Exception e) {
             throw new RuntimeException("Ошибка при сохранении auth в localStorage", e);
         }
     }
 }
+
