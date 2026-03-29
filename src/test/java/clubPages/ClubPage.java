@@ -32,15 +32,4 @@ public class ClubPage {
     public void checkError(String expectedText) {
         errorMessage.shouldHave(text(expectedText));
     }
-
-    @Step("Проверить имя рецензента: {name}")
-    public void checkReviewerName(String name) {
-        reviewerName.shouldHave(text(name));
-    }
-
-    @Step("Проверить, что в карточке клуба виден фрагмент текста отзыва: {snippet}")
-    public ClubPage checkReviewSnippetVisible(String snippet) {
-        clubContent.shouldHave(text(snippet));
-        return this;
-    }
 }

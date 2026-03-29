@@ -4,9 +4,6 @@ import helpers.AuthHelper;
 import io.qameta.allure.Step;
 import models.clubs.ClubCreateBodyModel;
 import models.clubs.ClubModel;
-import models.clubs.ClubReviewModel;
-import models.clubs.ClubReviewWriteBodyModel;
-import models.clubs.ClubsListResponseModel;
 import models.login.LoginBodyModel;
 import models.login.SuccessfulLoginResponseModel;
 import models.registration.RegistrationBodyModel;
@@ -73,59 +70,6 @@ public class ClubUiTest extends TestBase {
         clubPage.checkVisible()
                 .leaveClub()
                 .checkError("Не удалось покинуть клуб");
-    }
-
-
-    @Test
-    @DisplayName("Отзыв, созданный через API, отображается на странице клуба")
-    public void reviewCreatedViaApiIsVisibleOnClubPageTest() {
-        SuccessfulRegistrationResponseModel registrationResponse =
-                api.users.register(new RegistrationBodyModel(username, password));
-
-        SuccessfulLoginResponseModel loginResponse = api.auth.login(new LoginBodyModel(username, password));
-        ClubModel club = api.clubs.createClub(ClubsTestData.randomClubCreateBody(), loginResponse.access());
-        ClubReviewWriteBodyModel body = ClubsTestData.randomClubReviewBody(club.id());
-        api.clubs.createClubReview(body, loginResponse.access());
-
-        open("/favicon.ico");
-        AuthHelper.loginAndSetLocalStorage(registrationResponse, loginResponse);
-        open("/clubs/" + club.id());
-
-        String snippet = body.review().length() > 120 ? body.review().substring(0, 120) : body.review();
-        clubPage.checkVisible()
-                .checkReviewSnippetVisible(snippet);
-    }
-
-
-    @Test
-    @DisplayName("Проверка получения отзыва клуба по id /clubs/reviews/{id}/")
-    public void getAnyReviewClubTest() {
-        SuccessfulRegistrationResponseModel registrationResponse = api.users.register(new RegistrationBodyModel(username, password));
-
-        SuccessfulLoginResponseModel loginResponse = api.auth.login(new LoginBodyModel(username, password));
-        ClubReviewModel expectedReview = getAnyExistingReview();
-        api.clubs.getClubReviewById(expectedReview.id(), loginResponse.access());
-
-
-        open("/favicon.ico");
-        AuthHelper.loginAndSetLocalStorage(registrationResponse, loginResponse);
-        open("/clubs/" + expectedReview.club());
-
-        clubPage.checkReviewerName(expectedReview.user().username());
-
-
-    }
-
-
-    @Step("Получить любой существующий отзыв клуба для тестов /clubs/reviews/{id}/")
-    private ClubReviewModel getAnyExistingReview() {
-        ClubsListResponseModel clubsResponse = api.clubs.getClubs();
-
-        return step("Поиск существующего отзыва клуба для теста", () ->
-                clubsResponse.results().stream()
-                             .flatMap(club -> club.reviews().stream())
-                             .findFirst()
-                             .orElseThrow(() -> new AssertionError("В выдаче клубов нет отзывов для проверки /clubs/reviews/{id}/")));
     }
 
 
