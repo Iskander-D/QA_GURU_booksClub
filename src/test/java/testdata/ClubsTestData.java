@@ -8,6 +8,10 @@ import net.datafaker.Faker;
 
 public class ClubsTestData {
 
+    public static final String LOGIN_USERNAME = "wilkinso";
+    public static final String LOGIN_PASSWORD = "12345";
+
+
     private static final Faker FAKER = new Faker();
 
     public static ClubCreateBodyModel randomClubCreateBody() {

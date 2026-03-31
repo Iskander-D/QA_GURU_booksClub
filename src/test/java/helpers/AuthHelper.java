@@ -3,9 +3,9 @@ package helpers;
 import com.codeborne.selenide.Selenide;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.qameta.allure.Step;
+import models.localstorage.LocalstorageAuthModel;
 import models.login.SuccessfulLoginResponseModel;
 import models.registration.SuccessfulRegistrationResponseModel;
-import models.ui.LocalstorageAuthModel;
 
 public class AuthHelper {
 

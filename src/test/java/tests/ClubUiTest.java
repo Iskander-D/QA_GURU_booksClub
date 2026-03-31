@@ -1,7 +1,7 @@
 package tests;
 
 import helpers.AuthHelper;
-import io.qameta.allure.Step;
+import io.qameta.allure.*;
 import models.clubs.ClubCreateBodyModel;
 import models.clubs.ClubModel;
 import models.clubs.ClubReviewModel;
@@ -10,8 +10,8 @@ import models.login.LoginBodyModel;
 import models.login.SuccessfulLoginResponseModel;
 import models.registration.RegistrationBodyModel;
 import models.registration.SuccessfulRegistrationResponseModel;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import testdata.ClubsTestData;
 
@@ -25,13 +25,13 @@ public class ClubUiTest extends TestBase {
     String correctUsername;
 
 
-    @BeforeEach
-    public void prepareTestData() {
-
-        username = faker.name().firstName();
-        password = "12345";
-        correctUsername = "wilkinso";
-    }
+//    @BeforeEach
+//    public void prepareTestData() {
+//
+//        username = faker.name().firstName();
+//        password = "12345";
+//        correctUsername = "wilkinso";
+//    }
 
 
     @Test
@@ -41,8 +41,7 @@ public class ClubUiTest extends TestBase {
 
         SuccessfulLoginResponseModel loginResponse = api.auth.login(new LoginBodyModel(username, password));
 
-        ClubCreateBodyModel createBody = ClubsTestData.randomClubCreateBody();
-        ClubModel createdClub = api.clubs.createClub(createBody, loginResponse.access());
+        ClubModel createdClub = api.clubs.createClub(ClubsTestData.randomClubCreateBody(), loginResponse.access());
         String clubId = createdClub.id().toString();
 
         open("/favicon.ico");
@@ -54,6 +53,7 @@ public class ClubUiTest extends TestBase {
                 .checkError("Не удалось покинуть клуб");
 
     }
+
 
 
     @Test
@@ -147,6 +147,53 @@ public class ClubUiTest extends TestBase {
                              .findFirst()
                              .orElseThrow(() -> new AssertionError("В выдаче клубов нет отзывов для проверки /clubs/reviews/{id}/")));
     }
+
+
+    @Test
+    @AllureId("1")
+    @Description("Регистрация и логин через API, создание клуба, имитация сессии в localStorage, переход на страницу клуба. " +
+            "Ожидается: при попытке выйти из клуба как владелец показывается ошибка «Не удалось покинуть клуб».")
+    @DisplayName("[API] Владелец клуба не может покинуть клуб")
+    @Severity(SeverityLevel.CRITICAL)
+    public void cantLeaveClubAsOwnerNewTest() {
+        SuccessfulLoginResponseModel loginResponse = clubPage.openBlankPageWithNewUser();
+
+        ClubModel createdClub = api.clubs.createClub(ClubsTestData.randomClubCreateBody(), loginResponse.access());
+        String clubId = createdClub.id().toString();
+
+        clubPage.openPageById(clubId)
+                .leaveClub()
+                .checkError("Не удалось покинуть клуб");
+    }
+
+    @Test
+    @Tag("ui")
+    @AllureId("2")
+    @Description("Создаётся новый пользователь, открывается /profile, нажимается выход; проверяется отображение страницы входа.")
+    @DisplayName("[UI] Успешный выход из системы (старый пользователь)")
+    @Severity(SeverityLevel.CRITICAL)
+    public void successfulLogoutAsExistingUserTest() {
+        profilePage.openBlankPageWithExistingUser();
+        profilePage.openPage()
+                   .pressLogoutButton()
+                   .loginPageShouldBeOpened();
+    }
+
+    @Test
+    @Tag("ui")
+    @AllureId("3")
+    @Description("Создаётся новый пользователь, открывается /profile, нажимается выход; проверяется отображение страницы входа.")
+    @DisplayName("[UI] Успешный выход из системы (новый пользователь)")
+    @Severity(SeverityLevel.CRITICAL)
+    public void successfulLogoutAsNewUserTest() {
+        profilePage.openBlankPageWithNewUser();
+        profilePage.openPage()
+                   .pressLogoutButton()
+                   .loginPageShouldBeOpened();
+    }
+
+
+
 
 
 }

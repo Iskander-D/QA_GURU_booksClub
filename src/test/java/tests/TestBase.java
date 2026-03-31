@@ -2,6 +2,7 @@ package tests;
 
 import api.ApiClient;
 import clubPages.ClubPage;
+import clubPages.ProfilePage;
 import com.codeborne.selenide.Configuration;
 import io.restassured.RestAssured;
 import net.datafaker.Faker;
@@ -12,6 +13,7 @@ import java.util.Locale;
 public class TestBase {
     ApiClient api = new ApiClient();
     ClubPage clubPage = new ClubPage();
+    ProfilePage profilePage = new ProfilePage();
     Faker faker = new Faker(Locale.CANADA);
 
 
