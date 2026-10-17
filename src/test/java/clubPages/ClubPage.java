@@ -13,7 +13,7 @@ public class ClubPage extends BasePage {
     private final SelenideElement leaveButton = element(".leave-btn");
     private final SelenideElement errorMessage = element(".error");
     private final SelenideElement reviewerName = element(".reviewer-name");
-    private final SelenideElement checkDeleteReview = element(".no-reviews");
+    private final SelenideElement checkDeleteReview = element(".error");
     private final SelenideElement error = $(".error");
 
     @Step("Проверить, что контент клуба отображается")

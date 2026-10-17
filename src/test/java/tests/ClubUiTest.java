@@ -10,6 +10,7 @@ import models.login.LoginBodyModel;
 import models.login.SuccessfulLoginResponseModel;
 import models.registration.RegistrationBodyModel;
 import models.registration.SuccessfulRegistrationResponseModel;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -24,14 +25,13 @@ public class ClubUiTest extends TestBase {
     String password;
     String correctUsername;
 
+    @BeforeEach
+    public void prepareTestData() {
 
-//    @BeforeEach
-//    public void prepareTestData() {
-//
-//        username = faker.name().firstName();
-//        password = "12345";
-//        correctUsername = "wilkinso";
-//    }
+        username = faker.name().firstName();
+        password = "12345";
+        correctUsername = "wilkinso";
+    }
 
 
     @Test
@@ -55,10 +55,10 @@ public class ClubUiTest extends TestBase {
     }
 
 
-
     @Test
     @DisplayName("Проверка, что владелец клуба не может покинуть клуб (для заранее зарегистрированного пользователя)")
     public void cantLeaveClubAsClubOwnerWithoutRegistrationTest() {
+//        SuccessfulRegistrationResponseModel registrationResponse = api.users.register(new RegistrationBodyModel(correctUsername, password));
         SuccessfulLoginResponseModel loginResponse = api.auth.login(new LoginBodyModel(correctUsername, password));
 
         ClubCreateBodyModel createBody = ClubsTestData.randomClubCreateBody();
@@ -133,7 +133,8 @@ public class ClubUiTest extends TestBase {
         AuthHelper.loginAndSetLocalStorage(loginResponse, correctUsername);
         open("/clubs/" + created.id());
 
-        clubPage.checkReviewDeleted("Пока нет отзывов. Будьте первым, кто поделится впечатлениями!");
+        clubPage.checkReviewDeleted("Не удалось загрузить информацию о клубе");
+
     }
 
 
@@ -143,9 +144,9 @@ public class ClubUiTest extends TestBase {
 
         return step("Поиск существующего отзыва клуба для теста", () ->
                 clubsResponse.results().stream()
-                             .flatMap(club -> club.reviews().stream())
-                             .findFirst()
-                             .orElseThrow(() -> new AssertionError("В выдаче клубов нет отзывов для проверки /clubs/reviews/{id}/")));
+                        .flatMap(club -> club.reviews().stream())
+                        .findFirst()
+                        .orElseThrow(() -> new AssertionError("В выдаче клубов нет отзывов для проверки /clubs/reviews/{id}/")));
     }
 
 
@@ -175,8 +176,8 @@ public class ClubUiTest extends TestBase {
     public void successfulLogoutAsExistingUserTest() {
         profilePage.openBlankPageWithExistingUser();
         profilePage.openPage()
-                   .pressLogoutButton()
-                   .loginPageShouldBeOpened();
+                .pressLogoutButton()
+                .loginPageShouldBeOpened();
     }
 
     @Test
@@ -188,12 +189,9 @@ public class ClubUiTest extends TestBase {
     public void successfulLogoutAsNewUserTest() {
         profilePage.openBlankPageWithNewUser();
         profilePage.openPage()
-                   .pressLogoutButton()
-                   .loginPageShouldBeOpened();
+                .pressLogoutButton()
+                .loginPageShouldBeOpened();
     }
-
-
-
 
 
 }

@@ -22,7 +22,7 @@ public class TestBase {
         Configuration.baseUrl = "https://book-club.qa.guru";
         Configuration.browserSize = "1920x1080";
         Configuration.browser = "chrome";
-
+//        Configuration.holdBrowserOpen = true;
         RestAssured.baseURI = "https://book-club.qa.guru";
         RestAssured.basePath = "/api/v1";
     }
