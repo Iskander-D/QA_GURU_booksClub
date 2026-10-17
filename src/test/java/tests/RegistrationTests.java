@@ -20,9 +20,9 @@ public class RegistrationTests extends TestBase {
 
     @BeforeEach
     public void prepareTestData() {
-        Faker faker = new Faker();
+
         username = faker.name().firstName();
-        password = faker.name().firstName();
+        password = faker.credentials().password();
     }
 
     // todo move to specs

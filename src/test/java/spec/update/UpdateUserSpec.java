@@ -46,5 +46,13 @@ public class UpdateUserSpec {
             .expectBody("email", notNullValue())
             .expectBody("remoteAddr", notNullValue())
             .build();
+
+    public static ResponseSpecification emptyFieldsPatchSpec = new ResponseSpecBuilder()
+            .log(ALL)
+            .expectStatusCode(401)
+            .expectBody(matchesJsonSchemaInClasspath(
+                    "schemas/putUpdate/empty_fields_patch_response_schema.json"))
+            .expectBody("detail", notNullValue())
+            .build();
 }
 
